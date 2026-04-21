@@ -186,297 +186,143 @@
 |-------|----------|----------|
 | POST | /api/projects/:id/files | Загрузить файл |
 | GET | /api/files/:id | Скачать файл |
-СЕРВЕРНАЯ ЧАСТЬ (BACKEND)
-1. Краткое описание серверной части
-Серверная часть реализована на Node.js с использованием фреймворка Express. Она обеспечивает:
-	REST API для взаимодействия с клиентом (React)
-	Аутентификацию и авторизацию (JWT + bcrypt)
-	Работу с базой данных PostgreSQL через ORM Prisma
-	Хранение файлов (отчёты, презентации)
-	Разграничение ролей (student, teacher, admin)
-Сервер принимает HTTP-запросы от фронтенда, обрабатывает их, взаимодействует с БД и возвращает JSON-ответы.
-2. Описание основных функций сервера
-2.1 Аутентификация (authController.js)
-Функция	Метод	Эндпоинт	Параметры	Что делает	Возвращает
-login	POST	/api/auth/login	{ email, password }	Проверяет email, сравнивает пароль (bcrypt), генерирует JWT	{ token, user: { id, email, fullName, role } }
-register	POST	/api/auth/register	{ email, password, fullName, groupName }	Создаёт нового пользователя, хеширует пароль	{ token, user }
-4.2 Проекты (projectController.js)
-Функция	Метод	Эндпоинт	Параметры	Что делает	Возвращает
-getMyProjects	GET	/api/projects	req.user.id (из токена)	Возвращает проекты, где пользователь — владелец или участник	Project[]
-createProject	POST	/api/projects	{ title, description, deadline }	Создаёт новый проект, добавляет создателя как участника	Project
-updateProject	PUT	/api/projects/:id	{ title, description, deadline, status }	Обновляет данные проекта (только владелец)	Project
-deleteProject	DELETE	/api/projects/:id	-	Удаляет проект и все связанные задачи/файлы (только владелец)	{ success: true }
-addMember	POST	/api/projects/:id/members	{ userId, roleInProject }	Добавляет участника в проект	{ success: true, member }
-4.3 Задачи (taskController.js)
-Функция	Метод	Эндпоинт	Параметры	Что делает	Возвращает
-getTasksByProject	GET	/api/tasks?projectId=1	projectId (query)	Возвращает все задачи проекта	Task[]
-createTask	POST	/api/tasks	{ projectId, title, assigneeId, deadline }	Создаёт новую задачу	Task
-updateTaskStatus	PATCH	/api/tasks/:id/status	{ status }	Меняет статус задачи (todo/in_progress/done)	Task
-deleteTask	DELETE	/api/tasks/:id	-	Удаляет задачу	{ success: true }
-4.4 Оценки (gradeController.js) — для преподавателя
-Функция	Метод	Эндпоинт	Параметры	Что делает	Возвращает
-getSubmissions	GET	/api/grades/submissions	groupId (query)	Возвращает список сданных работ по группе	Submission[]
-setGrade	POST	/api/grades/:taskId	{ grade, comment }	Выставляет оценку и комментарий к задаче	{ success: true, grade }
+# Клиентская часть (Frontend) — Система управления учебными проектами
 
-Схема взаимодействия клиента и сервера
- 
-3. Примеры запросов и ответов сервера
-Пример 1: Регистрация нового пользователя
-Запрос 
-POST /api/auth/register
-Content-Type: application/json
+## 1. Краткое описание клиентской части
 
-{
-  "email": "ivanov@student.ru",
-  "password": "securePass123",
-  "fullName": "Иван Иванов",
-  "groupName": "ИС-21"
-}
-Ответ
-{
-  "success": true,
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "id": 15,
-    "email": "ivanov@student.ru",
-    "fullName": "Иван Иванов",
-    "role": "student",
-    "groupName": "ИС-21"
-  }
-}
-Пример 2: Создание нового проекта
-Запрос
-POST /api/projects
-Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
-Content-Type: application/json
+Клиентская часть реализована на **React** с использованием **Vite** как сборщика. Для стилизации используется **Material UI (MUI)** — библиотека готовых компонентов, обеспечивающая современный и адаптивный дизайн.
 
-{
-  "title": "Разработка мобильного приложения",
-  "description": "Создать приложение для учёта привычек",
-  "deadline": "2026-06-15"
-}
-Ответ
-{
-  "id": 42,
-  "ownerId": 15,
-  "title": "Разработка мобильного приложения",
-  "description": "Создать приложение для учёта привычек",
-  "deadline": "2026-06-15",
-  "status": "active",
-  "createdAt": "2026-04-21T10:30:00.000Z",
-  "members": [
-    {
-      "userId": 15,
-      "roleInProject": "leader"
-    }
-  ]
-}
-Пример 3: Получение списка проектов (Дашборд)
-Запрос
-GET /api/projects
-Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
-Ответ
-{
-  "projects": [
-    {
-      "id": 42,
-      "title": "Разработка мобильного приложения",
-      "deadline": "2026-06-15",
-      "status": "active",
-      "progress": 30,
-      "tasksCount": 8,
-      "completedTasks": 2
-    },
-    {
-      "id": 43,
-      "title": "Курсовая работа по БД",
-      "deadline": "2026-05-20",
-      "status": "active",
-      "progress": 75,
-      "tasksCount": 4,
-      "completedTasks": 3
-    }
-  ]
-}
-Пример 4: Создание задачи в проекте
-Запрос
-POST /api/tasks
-Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
-Content-Type: application/json
+### Основные возможности клиентской части
 
-{
-  "projectId": 42,
-  "title": "Спроектировать базу данных",
-  "assigneeId": 16,
-  "deadline": "2026-05-01"
-}
-Ответ
-{
-  "id": 101,
-  "projectId": 42,
-  "title": "Спроектировать базу данных",
-  "assigneeId": 16,
-  "assigneeName": "Петр Петров",
-  "deadline": "2026-05-01",
-  "status": "todo",
-  "grade": null,
-  "createdAt": "2026-04-21T11:00:00.000Z"
-}
-Пример 5: Изменение статуса задачи (Kanban)
-Запрос
-PATCH /api/tasks/101/status
-Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
-Content-Type: application/json
+| Функция | Описание |
+|---------|----------|
+| 📱 Адаптивный дизайн | Корректно работает на ПК, планшетах и смартфонах |
+| 🔐 Аутентификация | Вход и регистрация с сохранением JWT токена |
+| 📊 Дашборд | Отображение всех проектов пользователя |
+| 🗂️ Управление проектами | Создание, редактирование, просмотр проектов |
+| ✅ Управление задачами | Создание, редактирование, изменение статуса (Kanban) |
+| 📎 Загрузка файлов | Прикрепление отчётов и материалов к проектам |
+| 💬 Комментарии | Обсуждение задач внутри проекта |
+| 📈 Журнал оценок | Просмотр оценок (студент) / выставление оценок (преподаватель) |
 
-{
-  "status": "in_progress"
-}
-Ответ
-{
-  "success": true,
-  "task": {
-    "id": 101,
-    "title": "Спроектировать базу данных",
-    "status": "in_progress",
-    "updatedAt": "2026-04-21T11:30:00.000Z"
-  }
-}
-Пример 6: Выставление оценки (для преподавателя)
-Запрос:
-POST /api/grades/101
-Authorization: Bearer eyJhbGciOiJIUzI1NiIs... (role: teacher)
-Content-Type: application/json
+---
 
-{
-  "grade": 85,
-  "comment": "Хорошая работа, но добавьте нормализацию"
-}
-Ответ 
-json
-{
-  "success": true,
-  "grade": {
-    "taskId": 101,
-    "grade": 85,
-    "comment": "Хорошая работа, но добавьте нормализацию",
-    "gradedBy": "Преподаватель Смирнова А.И.",
-    "gradedAt": "2026-04-21T14:20:00.000Z"
-  }
-}
-
-КЛИЕНТСКАЯ ЧАСТЬ (FRONTEND)
-1. Краткое описание клиентской части
-Клиентская часть реализована на React с использованием Vite как сборщика. Для стилизации используется Material UI (MUI) — библиотека готовых компонентов, обеспечивающая современный и адаптивный дизайн.
-Основные возможности клиентской части:
-Функция	Описание
-Адаптивный дизайн	Корректно работает на ПК, планшетах и смартфонах
-Аутентификация	Вход и регистрация с сохранением JWT токена
-Дашборд	Отображение всех проектов пользователя
-Управление проектами	Создание, редактирование, просмотр проектов
-Управление задачами	Создание, редактирование, изменение статуса (Kanban)
-Загрузка файлов	Прикрепление отчётов и материалов к проектам
- Комментарии	Обсуждение задач внутри проекта
-Журнал оценок	Просмотр оценок (студент) / выставление оценок (преподаватель)
- Структура
+## 2. Структура клиентской части
 client/
 ├── public/
-│   └── index.html
+│ └── index.html
 │
 ├── src/
-│   ├── assets/               # Изображения, иконки
-│   │   └── logo.png
-│   │
-│   ├── components/           # Переиспользуемые компоненты
-│   │   ├── Layout/
-│   │   │   ├── Header.jsx    # Верхняя панель (навигация)
-│   │   │   ├── Sidebar.jsx   # Боковое меню
-│   │   │   └── Footer.jsx
-│   │   ├── ProjectCard.jsx   # Карточка проекта (на дашборде)
-│   │   ├── TaskCard.jsx      # Карточка задачи (на Kanban)
-│   │   ├── Comment.jsx       # Комментарий к задаче
-│   │   └── FileUpload.jsx    # Компонент загрузки файлов
-│   │
-│   ├── pages/                # Страницы приложения
-│   │   ├── LoginPage.jsx     # Страница входа
-│   │   ├── RegisterPage.jsx  # Страница регистрации
-│   │   ├── DashboardPage.jsx # Дашборд (список проектов)
-│   │   ├── ProjectPage.jsx   # Страница конкретного проекта
-│   │   ├── KanbanPage.jsx    # Доска задач (Kanban)
-│   │   ├── CalendarPage.jsx  # Календарь дедлайнов
-│   │   ├── GradesPage.jsx    # Журнал оценок
-│   │   └── ProfilePage.jsx   # Профиль пользователя
-│   │
-│   ├── services/             # API-запросы к серверу
-│   │   ├── api.js            # Базовый axios-клиент
-│   │   ├── authService.js    # Логин, регистрация
-│   │   ├── projectService.js # CRUD проектов
-│   │   ├── taskService.js    # CRUD задач
-│   │   ├── fileService.js    # Загрузка файлов
-│   │   └── gradeService.js   # Работа с оценками
-│   │
-│   ├── store/                # Redux Toolkit (состояние)
-│   │   ├── store.js
-│   │   ├── authSlice.js      # Пользователь, токен
-│   │   ├── projectSlice.js   # Список проектов
-│   │   └── taskSlice.js      # Список задач
-│   │
-│   ├── hooks/                # Кастомные хуки
-│   │   ├── useAuth.js
-│   │   └── useProjects.js
-│   │
-│   ├── utils/                # Вспомогательные функции
-│   │   ├── formatDate.js
-│   │   └── validateForm.js
-│   │
-│   ├── App.jsx               # Главный компонент (роутинг)
-│   ├── main.jsx              # Точка входа
-│   └── index.css             # Глобальные стили
+│ ├── assets/ # Изображения, иконки
+│ │ └── logo.png
+│ │
+│ ├── components/ # Переиспользуемые компоненты
+│ │ ├── Layout/
+│ │ │ ├── Header.jsx # Верхняя панель (навигация)
+│ │ │ ├── Sidebar.jsx # Боковое меню
+│ │ │ └── Footer.jsx
+│ │ ├── ProjectCard.jsx # Карточка проекта (на дашборде)
+│ │ ├── TaskCard.jsx # Карточка задачи (на Kanban)
+│ │ ├── Comment.jsx # Комментарий к задаче
+│ │ └── FileUpload.jsx # Компонент загрузки файлов
+│ │
+│ ├── pages/ # Страницы приложения
+│ │ ├── LoginPage.jsx # Страница входа
+│ │ ├── RegisterPage.jsx # Страница регистрации
+│ │ ├── DashboardPage.jsx # Дашборд (список проектов)
+│ │ ├── ProjectPage.jsx # Страница конкретного проекта
+│ │ ├── KanbanPage.jsx # Доска задач (Kanban)
+│ │ ├── CalendarPage.jsx # Календарь дедлайнов
+│ │ ├── GradesPage.jsx # Журнал оценок
+│ │ └── ProfilePage.jsx # Профиль пользователя
+│ │
+│ ├── services/ # API-запросы к серверу
+│ │ ├── api.js # Базовый axios-клиент
+│ │ ├── authService.js # Логин, регистрация
+│ │ ├── projectService.js # CRUD проектов
+│ │ ├── taskService.js # CRUD задач
+│ │ ├── fileService.js # Загрузка файлов
+│ │ └── gradeService.js # Работа с оценками
+│ │
+│ ├── store/ # Redux Toolkit (состояние)
+│ │ ├── store.js
+│ │ ├── authSlice.js # Пользователь, токен
+│ │ ├── projectSlice.js # Список проектов
+│ │ └── taskSlice.js # Список задач
+│ │
+│ ├── hooks/ # Кастомные хуки
+│ │ ├── useAuth.js
+│ │ └── useProjects.js
+│ │
+│ ├── utils/ # Вспомогательные функции
+│ │ ├── formatDate.js
+│ │ └── validateForm.js
+│ │
+│ ├── App.jsx # Главный компонент (роутинг)
+│ ├── main.jsx # Точка входа
+│ └── index.css # Глобальные стили
 │
-├── .env                      # Переменные окружения
+├── .env # Переменные окружения
 ├── .gitignore
 ├── index.html
 ├── package.json
 └── vite.config.js
-Схема навигации
- 
-Таблица маршрутов (React Router)
-Путь	Компонент	Доступ	Описание
-/login	LoginPage	Публичный	Страница входа
-/register	RegisterPage	Публичный	Страница регистрации
-/dashboard	DashboardPage	Приватный	Главная после входа
-/projects/:id	ProjectPage	Приватный	Детали проекта
-/projects/:id/kanban	KanbanPage	Приватный	Доска задач
-/calendar	CalendarPage	Приватный	Календарь дедлайнов
-/grades	GradesPage	Приватный	Журнал оценок
-/profile	ProfilePage	Приватный	Настройки профиля
-Основные экраны и блоки
-Страница входа 
- 
-	Поле Email — ввод email
-	Поле Пароль — ввод пароля (тип password)
-	Кнопка ВОЙТИ — отправка запроса на сервер
-	Ссылка Регистрация — переход на страницу регистрации
-Дашборд
- 
-	[+ НОВЫЙ ПРОЕКТ] — открывает модальное окно создания проекта
-	[Открыть] на карточке — переход на страницу проекта
-	Виджет Дедлайны на неделю — список ближайших дедлайнов
-	Аватар пользователя (вверху справа) — переход в профиль
 
-Страница проекта
- 
-	ЗАДАЧИ — список задач (таблица)
-	ФАЙЛЫ — загруженные файлы, кнопка загрузки
-	УЧАСТНИКИ — список команды, добавление участников
-	ОБСУЖДЕНИЕ — чат/комментарии по проекту
+---
 
-Доска Kanban
- 
-	Drag-and-Drop — перетаскивание карточек между колонками
-	Каждая карточка содержит: название, ответственного, дедлайн
-	Кнопка [+ ДОБАВИТЬ] — создание новой задачи
+## 3. Схема навигации
 
-Создание проекта
+### Таблица маршрутов (React Router)
+
+| Путь | Компонент | Доступ | Описание |
+|------|-----------|--------|----------|
+| `/login` | `LoginPage` | Публичный | Страница входа |
+| `/register` | `RegisterPage` | Публичный | Страница регистрации |
+| `/dashboard` | `DashboardPage` | Приватный | Главная после входа |
+| `/projects/:id` | `ProjectPage` | Приватный | Детали проекта |
+| `/projects/:id/kanban` | `KanbanPage` | Приватный | Доска задач |
+| `/calendar` | `CalendarPage` | Приватный | Календарь дедлайнов |
+| `/grades` | `GradesPage` | Приватный | Журнал оценок |
+| `/profile` | `ProfilePage` | Приватный | Настройки профиля |
+
+---
+
+## 4. Основные экраны и блоки
+
+### Страница входа
+
+- **Поле Email** — ввод email
+- **Поле Пароль** — ввод пароля (тип password)
+- **Кнопка ВОЙТИ** — отправка запроса на сервер
+- **Ссылка Регистрация** — переход на страницу регистрации
+
+### Дашборд
+
+- **[+ НОВЫЙ ПРОЕКТ]** — открывает модальное окно создания проекта
+- **[Открыть]** на карточке — переход на страницу проекта
+- **Виджет «Дедлайны на неделю»** — список ближайших дедлайнов
+- **Аватар пользователя** (вверху справа) — переход в профиль
+
+### Страница проекта
+
+- **ЗАДАЧИ** — список задач (таблица)
+- **ФАЙЛЫ** — загруженные файлы, кнопка загрузки
+- **УЧАСТНИКИ** — список команды, добавление участников
+- **ОБСУЖДЕНИЕ** — чат/комментарии по проекту
+
+### Доска Kanban
+
+- **Drag-and-Drop** — перетаскивание карточек между колонками
+- Каждая карточка содержит: название, ответственного, дедлайн
+- **Кнопка [+ ДОБАВИТЬ]** — создание новой задачи
+
+---
+
+## 5. Компоненты и формы
+
+### Создание проекта
+
+```jsx
 // Компонент CreateProjectModal.jsx
 const CreateProjectModal = ({ open, onClose }) => {
   const [title, setTitle] = useState('');
@@ -499,104 +345,4 @@ const CreateProjectModal = ({ open, onClose }) => {
       <button onClick={handleSubmit}>Создать</button>
     </Modal>
   );
-};
-Создание задач на Канбан
-// Компонент CreateTaskForm.jsx
-const CreateTaskForm = ({ projectId, onSuccess }) => {
-  const [title, setTitle] = useState('');
-  const [assigneeId, setAssigneeId] = useState('');
-  const [deadline, setDeadline] = useState('');
-  
-  const handleSubmit = async () => {
-    await taskService.createTask({
-      projectId,
-      title,
-      assigneeId,
-      deadline
-    });
-    onSuccess();
-  };
-  
-  return ( /* форма */ );
-};
-Запрос клиента к серверу
-// services/api.js
-import axios from 'axios';
-
-const API_URL = 'http://localhost:5000/api';
-
-const api = axios.create({
-  baseURL: API_URL,
-  headers: { 'Content-Type': 'application/json' }
-});
-
-// Добавление токена в каждый запрос
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-export default api;
-сервис проектов
-// services/projectService.js
-import api from './api';
-
-export const projectService = {
-  // Получить все проекты пользователя
-  getMyProjects: () => api.get('/projects'),
-  
-  // Создать проект
-  createProject: (data) => api.post('/projects', data),
-  
-  // Обновить проект
-  updateProject: (id, data) => api.put(`/projects/${id}`, data),
-  
-  // Удалить проект
-  deleteProject: (id) => api.delete(`/projects/${id}`),
-  
-  // Добавить участника
-  addMember: (projectId, userId, role) => 
-    api.post(`/projects/${projectId}/members`, { userId, roleInProject: role })
-};
-Сервис задач
-// services/taskService.js
-import api from './api';
-
-export const taskService = {
-  // Получить задачи проекта
-  getTasksByProject: (projectId) => api.get(`/tasks?projectId=${projectId}`),
-  
-  // Создать задачу
-  createTask: (data) => api.post('/tasks', data),
-  
-  // Обновить статус задачи
-  updateTaskStatus: (taskId, { status }) => 
-    api.patch(`/tasks/${taskId}/status`, { status }),
-  
-  // Удалить задачу
-  deleteTask: (taskId) => api.delete(`/tasks/${taskId}`)
-};
-Примеры запросов из клиента
-Пример 1: Авторизация
-// При клике на кнопку "Войти"
-const handleLogin = async () => {
-  const response = await authService.login({ email, password });
-  localStorage.setItem('token', response.data.token);
-  localStorage.setItem('user', JSON.stringify(response.data.user));
-  navigate('/dashboard');
-};
-Пример 2. Создание проекта
-// При отправке формы создания проекта
-const handleCreateProject = async (formData) => {
-  try {
-    const response = await projectService.createProject(formData);
-    dispatch(addProject(response.data)); // Redux store
-    showSnackbar('Проект создан!', 'success');
-    onClose();
-  } catch (error) {
-    showSnackbar('Ошибка: ' + error.message, 'error');
-  }
 };
