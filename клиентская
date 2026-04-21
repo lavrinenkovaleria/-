@@ -1,0 +1,59 @@
+client/
+├── public/
+│   └── index.html
+│
+├── src/
+│   ├── assets/               # Изображения, иконки
+│   │   └── logo.png
+│   │
+│   ├── components/           # Переиспользуемые компоненты
+│   │   ├── Layout/
+│   │   │   ├── Header.jsx    # Верхняя панель (навигация)
+│   │   │   ├── Sidebar.jsx   # Боковое меню
+│   │   │   └── Footer.jsx
+│   │   ├── ProjectCard.jsx   # Карточка проекта (на дашборде)
+│   │   ├── TaskCard.jsx      # Карточка задачи (на Kanban)
+│   │   ├── Comment.jsx       # Комментарий к задаче
+│   │   └── FileUpload.jsx    # Компонент загрузки файлов
+│   │
+│   ├── pages/                # Страницы приложения
+│   │   ├── LoginPage.jsx     # Страница входа
+│   │   ├── RegisterPage.jsx  # Страница регистрации
+│   │   ├── DashboardPage.jsx # Дашборд (список проектов)
+│   │   ├── ProjectPage.jsx   # Страница конкретного проекта
+│   │   ├── KanbanPage.jsx    # Доска задач (Kanban)
+│   │   ├── CalendarPage.jsx  # Календарь дедлайнов
+│   │   ├── GradesPage.jsx    # Журнал оценок
+│   │   └── ProfilePage.jsx   # Профиль пользователя
+│   │
+│   ├── services/             # API-запросы к серверу
+│   │   ├── api.js            # Базовый axios-клиент
+│   │   ├── authService.js    # Логин, регистрация
+│   │   ├── projectService.js # CRUD проектов
+│   │   ├── taskService.js    # CRUD задач
+│   │   ├── fileService.js    # Загрузка файлов
+│   │   └── gradeService.js   # Работа с оценками
+│   │
+│   ├── store/                # Redux Toolkit (состояние)
+│   │   ├── store.js
+│   │   ├── authSlice.js      # Пользователь, токен
+│   │   ├── projectSlice.js   # Список проектов
+│   │   └── taskSlice.js      # Список задач
+│   │
+│   ├── hooks/                # Кастомные хуки
+│   │   ├── useAuth.js
+│   │   └── useProjects.js
+│   │
+│   ├── utils/                # Вспомогательные функции
+│   │   ├── formatDate.js
+│   │   └── validateForm.js
+│   │
+│   ├── App.jsx               # Главный компонент (роутинг)
+│   ├── main.jsx              # Точка входа
+│   └── index.css             # Глобальные стили
+│
+├── .env                      # Переменные окружения
+├── .gitignore
+├── index.html
+├── package.json
+└── vite.config.js
