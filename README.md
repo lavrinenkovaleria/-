@@ -90,10 +90,8 @@
 ---
 
 ## 5. Модель данных
+<img width="846" height="811" alt="image" src="https://github.com/user-attachments/assets/35d677f1-538d-48ff-87f6-2dee8607d269" />
 
-### 5.1 ER-диаграмма
-
-![ER-диаграмма](media/image1.png)
 
 ### 5.2 Описание таблиц
 
@@ -188,17 +186,3 @@
 |-------|----------|----------|
 | POST | /api/projects/:id/files | Загрузить файл |
 | GET | /api/files/:id | Скачать файл |
-
-### Пример запроса
-
-**POST /api/tasks**  
-Content-Type: application/json  
-Authorization: Bearer `<token>`
-
-```json
-{
-  "projectId": 10,
-  "title": "Написать введение к курсовой",
-  "assigneeId": 5,
-  "deadline": "2026-05-20"
-}
