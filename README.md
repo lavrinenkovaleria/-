@@ -322,7 +322,6 @@ client/
 
 ### Создание проекта
 
-```jsx
 // Компонент CreateProjectModal.jsx
 const CreateProjectModal = ({ open, onClose }) => {
   const [title, setTitle] = useState('');
@@ -347,6 +346,90 @@ const CreateProjectModal = ({ open, onClose }) => {
   );
 };
 
+# Серверная часть (Backend) — Система управления учебными проектами
+
+## 1. Краткое описание серверной части
+
+Серверная часть реализована на **Node.js** с использованием фреймворка **Express**. Она обеспечивает:
+
+- **REST API** для взаимодействия с клиентом (React)
+- **Аутентификацию и авторизацию** (JWT + bcrypt)
+- **Работу с базой данных** PostgreSQL через ORM Prisma
+- **Хранение файлов** (отчёты, презентации)
+- **Разграничение ролей** (student, teacher, admin)
+
+Сервер принимает HTTP-запросы от фронтенда, обрабатывает их, взаимодействует с БД и возвращает JSON-ответы.
+
+---
+
+## 2. Описание основных функций сервера
+
+### 2.1 Аутентификация (`authController.js`)
+
+| Функция | Метод | Эндпоинт | Параметры | Что делает | Возвращает |
+|---------|-------|----------|-----------|------------|------------|
+| `login` | POST | `/api/auth/login` | `{ email, password }` | Проверяет email, сравнивает пароль (bcrypt), генерирует JWT | `{ token, user: { id, email, fullName, role } }` |
+| `register` | POST | `/api/auth/register` | `{ email, password, fullName, groupName }` | Создаёт нового пользователя, хеширует пароль | `{ token, user }` |
+
+### 2.2 Проекты (`projectController.js`)
+
+| Функция | Метод | Эндпоинт | Параметры | Что делает | Возвращает |
+|---------|-------|----------|-----------|------------|------------|
+| `getMyProjects` | GET | `/api/projects` | `req.user.id` (из токена) | Возвращает проекты, где пользователь — владелец или участник | `Project[]` |
+| `createProject` | POST | `/api/projects` | `{ title, description, deadline }` | Создаёт новый проект, добавляет создателя как участника | `Project` |
+| `updateProject` | PUT | `/api/projects/:id` | `{ title, description, deadline, status }` | Обновляет данные проекта (только владелец) | `Project` |
+| `deleteProject` | DELETE | `/api/projects/:id` | `-` | Удаляет проект и все связанные задачи/файлы (только владелец) | `{ success: true }` |
+| `addMember` | POST | `/api/projects/:id/members` | `{ userId, roleInProject }` | Добавляет участника в проект | `{ success: true, member }` |
+
+### 2.3 Задачи (`taskController.js`)
+
+| Функция | Метод | Эндпоинт | Параметры | Что делает | Возвращает |
+|---------|-------|----------|-----------|------------|------------|
+| `getTasksByProject` | GET | `/api/tasks?projectId=1` | `projectId` (query) | Возвращает все задачи проекта | `Task[]` |
+| `createTask` | POST | `/api/tasks` | `{ projectId, title, assigneeId, deadline }` | Создаёт новую задачу | `Task` |
+| `updateTaskStatus` | PATCH | `/api/tasks/:id/status` | `{ status }` | Меняет статус задачи (todo/in_progress/done) | `Task` |
+| `deleteTask` | DELETE | `/api/tasks/:id` | `-` | Удаляет задачу | `{ success: true }` |
+
+### 2.4 Оценки (`gradeController.js`) — для преподавателя
+
+| Функция | Метод | Эндпоинт | Параметры | Что делает | Возвращает |
+|---------|-------|----------|-----------|------------|------------|
+| `getSubmissions` | GET | `/api/grades/submissions` | `groupId` (query) | Возвращает список сданных работ по группе | `Submission[]` |
+| `setGrade` | POST | `/api/grades/:taskId` | `{ grade, comment }` | Выставляет оценку и комментарий к задаче | `{ success: true, grade }` |
+
+---
+
+## 3. Схема взаимодействия клиента и сервера
+
   
   return ( /* форма */ );
 };
+
+### Последовательность запроса:
+
+1. Пользователь отправляет запрос через Frontend
+2. Frontend отправляет HTTP-запрос на Server
+3. Server проверяет JWT токен (если требуется)
+4. Server передаёт запрос в соответствующий Controller
+5. Controller вызывает Service (бизнес-логику)
+6. Service обращается к БД через Prisma ORM
+7. БД возвращает данные
+8. Server формирует JSON-ответ и отправляет клиенту
+
+---
+
+## 4. Примеры запросов и ответов сервера
+
+### Пример 1: Регистрация нового пользователя
+
+**Запрос:**
+```http
+POST /api/auth/register
+Content-Type: application/json
+
+{
+  "email": "ivanov@student.ru",
+  "password": "securePass123",
+  "fullName": "Иван Иванов",
+  "groupName": "ИС-21"
+}
