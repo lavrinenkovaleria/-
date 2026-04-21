@@ -346,3 +346,151 @@ const CreateProjectModal = ({ open, onClose }) => {
     </Modal>
   );
 };
+Создание задач на Kanban
+jsx
+// Компонент CreateTaskForm.jsx
+const CreateTaskForm = ({ projectId, onSuccess }) => {
+  const [title, setTitle] = useState('');
+  const [assigneeId, setAssigneeId] = useState('');
+  const [deadline, setDeadline] = useState('');
+  
+  const handleSubmit = async () => {
+    await taskService.createTask({
+      projectId,
+      title,
+      assigneeId,
+      deadline
+    });
+    onSuccess();
+  };
+  
+  return ( /* форма */ );
+};
+6. Запросы клиента к серверу
+Базовый API-клиент
+jsx
+// services/api.js
+import axios from 'axios';
+
+const API_URL = 'http://localhost:5000/api';
+
+const api = axios.create({
+  baseURL: API_URL,
+  headers: { 'Content-Type': 'application/json' }
+});
+
+// Добавление токена в каждый запрос
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+export default api;
+Сервис проектов
+jsx
+// services/projectService.js
+import api from './api';
+
+export const projectService = {
+  // Получить все проекты пользователя
+  getMyProjects: () => api.get('/projects'),
+  
+  // Создать проект
+  createProject: (data) => api.post('/projects', data),
+  
+  // Обновить проект
+  updateProject: (id, data) => api.put(`/projects/${id}`, data),
+  
+  // Удалить проект
+  deleteProject: (id) => api.delete(`/projects/${id}`),
+  
+  // Добавить участника
+  addMember: (projectId, userId, role) => 
+    api.post(`/projects/${projectId}/members`, { userId, roleInProject: role })
+};
+Сервис задач
+jsx
+// services/taskService.js
+import api from './api';
+
+export const taskService = {
+  // Получить задачи проекта
+  getTasksByProject: (projectId) => api.get(`/tasks?projectId=${projectId}`),
+  
+  // Создать задачу
+  createTask: (data) => api.post('/tasks', data),
+  
+  // Обновить статус задачи
+  updateTaskStatus: (taskId, { status }) => 
+    api.patch(`/tasks/${taskId}/status`, { status }),
+  
+  // Удалить задачу
+  deleteTask: (taskId) => api.delete(`/tasks/${taskId}`)
+};
+7. Примеры запросов из клиента
+Пример 1: Авторизация
+jsx
+// При клике на кнопку "Войти"
+const handleLogin = async () => {
+  const response = await authService.login({ email, password });
+  localStorage.setItem('token', response.data.token);
+  localStorage.setItem('user', JSON.stringify(response.data.user));
+  navigate('/dashboard');
+};
+Пример 2: Создание проекта
+jsx
+// При отправке формы создания проекта
+const handleCreateProject = async (formData) => {
+  try {
+    const response = await projectService.createProject(formData);
+    dispatch(addProject(response.data)); // Redux store
+    showSnackbar('Проект создан!', 'success');
+    onClose();
+  } catch (error) {
+    showSnackbar('Ошибка: ' + error.message, 'error');
+  }
+};
+8. Сценарий использования (User Journey)
+text
+1. ПОЛЬЗОВАТЕЛЬ → Открывает страницу входа (/login)
+2. ПОЛЬЗОВАТЕЛЬ → Вводит email и пароль → Нажимает [ВОЙТИ]
+3. СИСТЕМА → Отправляет POST /api/auth/login
+4. СИСТЕМА → Сохраняет JWT токен в localStorage
+5. ПОЛЬЗОВАТЕЛЬ → Перенаправляется на /dashboard
+6. ПОЛЬЗОВАТЕЛЬ → Нажимает [+ НОВЫЙ ПРОЕКТ]
+7. ПОЛЬЗОВАТЕЛЬ → Заполняет форму → Нажимает [СОЗДАТЬ]
+8. СИСТЕМА → Отправляет POST /api/projects
+9. ПОЛЬЗОВАТЕЛЬ → Видит новый проект на дашборде
+10. ПОЛЬЗОВАТЕЛЬ → Нажимает [Открыть] на карточке проекта
+11. ПОЛЬЗОВАТЕЛЬ → Переходит на страницу проекта (/projects/:id)
+12. ПОЛЬЗОВАТЕЛЬ → Создаёт задачи → Перетаскивает их в Kanban
+9. Технологический стек клиентской части
+Компонент	Технология
+Framework	React 18
+Build tool	Vite
+UI Library	Material UI (MUI)
+State Manager	Redux Toolkit
+Routing	React Router v6
+HTTP Client	Axios
+Drag-and-Drop	react-beautiful-dnd
+Forms	React Hook Form
+Date formatting	date-fns
+10. Запуск клиентской части
+bash
+# Переход в папку клиента
+cd client
+
+# Установка зависимостей
+npm install
+
+# Запуск в режиме разработки
+npm run dev
+
+# Сборка для продакшена
+npm run build
+
+# Предпросмотр собранного проекта
+npm run preview
