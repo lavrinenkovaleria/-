@@ -1,0 +1,314 @@
+# ============================================
+# DEPENDENCIES (зависимости)
+# ============================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.yarn-integrity
+.npm
+*.tgz
+
+# ============================================
+# BUILDS & DIST (сборка проекта)
+# ============================================
+build/
+dist/
+.out/
+client/build/
+client/dist/
+server/dist/
+
+# ============================================
+# CACHE (кэши сборщиков и линтеров)
+# ============================================
+.cache/
+.parcel-cache/
+*.tsbuildinfo
+.eslintcache
+.stylelintcache
+.cache-loader/
+
+# ============================================
+# ENVIRONMENT VARIABLES (переменные окружения)
+# ============================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*
+!.env.example
+
+# ============================================
+# LOGS (логи приложения)
+# ============================================
+logs/
+*.log
+npm-debug.log*
+report.*.json
+error.log
+access.log
+
+# ============================================
+# RUNTIME DATA (данные во время выполнения)
+# ============================================
+pids/
+*.pid
+*.seed
+*.pid.lock
+.lock-wscript
+
+# ============================================
+# COVERAGE & TESTS (покрытие и тесты)
+# ============================================
+coverage/
+*.lcov
+.nyc_output/
+lib-cov/
+test-results/
+junit.xml
+
+# ============================================
+# DATABASE (база данных - локальная)
+# ============================================
+*.sqlite
+*.sqlite3
+*.db
+prisma/*.db
+prisma/*.db-journal
+
+# Миграции (файлы миграций оставляем, но БД нет)
+migrations/*.sql
+!migrations/.gitkeep
+!migrations/*.js
+
+# ============================================
+# UPLOADS & FILES (загруженные файлы пользователей)
+# ============================================
+uploads/
+files/
+temp-files/
+student-projects-files/
+*.pdf
+*.docx
+*.xlsx
+*.pptx
+!package.json
+
+# ============================================
+# IDE & EDITORS (настройки редакторов)
+# ============================================
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# IntelliJ / WebStorm / PHPStorm
+.idea/
+*.iml
+*.ipr
+*.iws
+.settings/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim / Neovim
+*.swp
+*.swo
+*~
+.nvim/
+
+# ============================================
+# OPERATING SYSTEMS (системные файлы)
+# ============================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+.AppleDB
+.AppleDesktop
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+
+# Linux
+*~
+.fuse_hidden*
+.Trash-*
+.nfs*
+.directory
+
+# ============================================
+# SECURITY & KEYS (секреты и ключи)
+# ============================================
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+*.pub
+id_rsa
+id_rsa.*
+*.ppk
+*.token
+*.secret
+secrets.json
+credentials.json
+.service-account.json
+
+# ============================================
+# DEPLOYMENT (деплой и хостинг)
+# ============================================
+# Vercel
+.vercel/
+
+# Render
+render.yaml
+!.render.yaml
+
+# Railway
+railway.json
+!.railway.json
+
+# Netlify
+.netlify/
+
+# Serverless
+.serverless/
+.firebase/
+.gcloud/
+
+# Docker
+docker-compose.override.yml
+*.dockerignore
+Dockerfile.local
+.docker/
+
+# ============================================
+# PROJECT-SPECIFIC (специфичные для вашего проекта)
+# ============================================
+# Отчёты и сгенерированные документы
+reports/
+generated-docs/
+*.generated.pdf
+*.generated.docx
+
+# Скриншоты интерфейса (хранятся отдельно)
+screenshots/
+!mockups/.gitkeep
+
+# Временные файлы проектов студентов
+temp/
+tmp/
+temp-student-work/
+
+# Архивы с работами студентов
+submissions/
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# Бэкапы базы данных
+backups/
+*.backup
+*.dump
+
+# ============================================
+# TEMPORARY FILES (временные файлы)
+# ============================================
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+*.bak
+*.orig
+*.rej
+
+# ============================================
+# REPL & DEBUG (история отладки)
+# ============================================
+.node_repl_history
+.node_repl_history
+.redis_repl_history
+debug.log
+debug/
+
+# ============================================
+# DOCUMENTS (если не хотите хранить документы в репозитории)
+# ============================================
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.ppt
+*.pptx
+!README.md
+!*.md
+
+# ============================================
+# TEST FILES (тестовые файлы)
+# ============================================
+test/
+tests/
+__tests__/
+*.test.js
+*.spec.js
+*.test.ts
+*.spec.ts
+*.test.tsx
+*.spec.tsx
+jest.config.js
+vite.config.js
+!vite.config.js
+
+# ============================================
+# PROFILE & PERFORMANCE (профилирование)
+# ============================================
+profile/
+cpuprofile
+heapsnapshot
+*.heapdump
+
+# ============================================
+# PRISMA (ORM)
+# ============================================
+prisma/*.db
+prisma/*.db-journal
+prisma/migrations/*.sql
+!prisma/migrations/migration_lock.toml
+prisma/seed.js
+!prisma/schema.prisma
+
+# ============================================
+# EXAMPLE FILES (примеры, которые не нужны в продакшене)
+# ============================================
+example/
+examples/
+*.example
+!*.env.example
