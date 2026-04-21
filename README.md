@@ -346,21 +346,7 @@ const CreateProjectModal = ({ open, onClose }) => {
     </Modal>
   );
 };
-// Компонент CreateTaskForm.jsx
-const CreateTaskForm = ({ projectId, onSuccess }) => {
-  const [title, setTitle] = useState('');
-  const [assigneeId, setAssigneeId] = useState('');
-  const [deadline, setDeadline] = useState('');
-  
-  const handleSubmit = async () => {
-    await taskService.createTask({
-      projectId,
-      title,
-      assigneeId,
-      deadline
-    });
-    onSuccess();
-  };
+
   
   return ( /* форма */ );
 };
