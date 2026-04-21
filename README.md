@@ -423,7 +423,7 @@ const CreateProjectModal = ({ open, onClose }) => {
 ### Пример 1: Регистрация нового пользователя
 
 **Запрос:**
-```http
+``http
 POST /api/auth/register
 Content-Type: application/json
 
@@ -433,3 +433,158 @@ Content-Type: application/json
   "fullName": "Иван Иванов",
   "groupName": "ИС-21"
 }
+# База данных (Database) — Система управления учебными проектами
+
+## 1. Краткое описание базы данных
+
+База данных реализована на **PostgreSQL** (реляционная СУБД). Для взаимодействия с БД используется **Prisma ORM** — современный инструмент, который позволяет работать с базой данных через TypeScript/JavaScript, обеспечивая типобезопасность и автоматическую генерацию миграций.
+
+### Основные характеристики
+
+| Характеристика | Значение |
+|----------------|----------|
+| СУБД | PostgreSQL 15+ |
+| ORM | Prisma |
+| Количество таблиц | 6 основных таблиц |
+| Тип связей | Один-ко-многим (1:M), Многие-ко-многим (M:N) |
+| Хранение паролей | bcrypt хеш (не хранятся в открытом виде) |
+| Каскадное удаление | При удалении пользователя удаляются его проекты и задачи |
+
+---
+
+## 2. Схема базы данных (ER-диаграмма)
+
+### Связи между таблицами
+
+| Связь | Тип | Описание |
+|-------|-----|----------|
+| users → projects | 1:M | Один пользователь создаёт много проектов |
+| users → project_members | 1:M | Один пользователь участвует во многих проектах |
+| projects → project_members | 1:M | Один проект содержит много участников |
+| projects → tasks | 1:M | Один проект содержит много задач |
+| users → tasks | 1:M | Один пользователь назначен на много задач |
+| projects → files | 1:M | Один проект содержит много файлов |
+| users → files | 1:M | Один пользователь загружает много файлов |
+| tasks → comments | 1:M | Одна задача имеет много комментариев |
+| users → comments | 1:M | Один пользователь пишет много комментариев |
+
+---
+
+## 3. Описание таблиц
+
+### 3.1 Таблица `users` (Пользователи)
+
+Хранит информацию о всех пользователях системы: студентах, преподавателях и администраторах.
+
+| Поле | Тип | Ограничения | Описание |
+|------|-----|-------------|----------|
+| `id` | SERIAL | PRIMARY KEY | Уникальный идентификатор пользователя |
+| `email` | VARCHAR(100) | NOT NULL, UNIQUE | Email пользователя (используется для входа) |
+| `password_hash` | VARCHAR(255) | NOT NULL | Хеш пароля (bcrypt) |
+| `full_name` | VARCHAR(100) | NOT NULL | Полное имя пользователя |
+| `role` | VARCHAR(20) | NOT NULL, DEFAULT 'student' | Роль: `student`, `teacher`, `admin` |
+| `group_name` | VARCHAR(50) | | Учебная группа (например, "ИС-21") |
+| `created_at` | TIMESTAMP | DEFAULT NOW() | Дата и время регистрации |
+
+### 3.2 Таблица `projects` (Проекты)
+
+Хранит информацию об учебных проектах.
+
+| Поле | Тип | Ограничения | Описание |
+|------|-----|-------------|----------|
+| `id` | SERIAL | PRIMARY KEY | Уникальный идентификатор проекта |
+| `owner_id` | INT | FOREIGN KEY → users(id) | ID создателя проекта (владелец) |
+| `title` | VARCHAR(200) | NOT NULL | Название проекта |
+| `description` | TEXT | | Подробное описание проекта |
+| `deadline` | DATE | | Дата сдачи проекта |
+| `status` | VARCHAR(20) | DEFAULT 'active' | Статус: `active`, `archived`, `completed` |
+| `created_at` | TIMESTAMP | DEFAULT NOW() | Дата создания проекта |
+
+### 3.3 Таблица `project_members` (Участники проектов)
+
+Связующая таблица для реализации связи **многие-ко-многим** между пользователями и проектами.
+
+| Поле | Тип | Ограничения | Описание |
+|------|-----|-------------|----------|
+| `project_id` | INT | FOREIGN KEY → projects(id), PRIMARY KEY | ID проекта |
+| `user_id` | INT | FOREIGN KEY → users(id), PRIMARY KEY | ID участника |
+| `role_in_project` | VARCHAR(20) | DEFAULT 'member' | Роль: `leader` (руководитель), `member` (участник) |
+| `joined_at` | TIMESTAMP | DEFAULT NOW() | Дата加入 проекта |
+
+### 3.4 Таблица `tasks` (Задачи)
+
+Хранит задачи внутри проектов.
+
+| Поле | Тип | Ограничения | Описание |
+|------|-----|-------------|----------|
+| `id` | SERIAL | PRIMARY KEY | Уникальный идентификатор задачи |
+| `project_id` | INT | FOREIGN KEY → projects(id) | ID проекта, к которому относится задача |
+| `title` | VARCHAR(200) | NOT NULL | Название задачи |
+| `description` | TEXT | | Подробное описание задачи |
+| `assignee_id` | INT | FOREIGN KEY → users(id) | Ответственный за выполнение |
+| `deadline` | DATE | | Дедлайн выполнения задачи |
+| `status` | VARCHAR(20) | DEFAULT 'todo' | Статус: `todo`, `in_progress`, `done` |
+| `grade` | INT | CHECK (grade >= 0 AND grade <= 100) | Оценка (выставляется преподавателем) |
+| `grade_comment` | TEXT | | Комментарий преподавателя к оценке |
+| `created_at` | TIMESTAMP | DEFAULT NOW() | Дата создания задачи |
+
+### 3.5 Таблица `files` (Файлы)
+
+Хранит информацию о загруженных файлах (отчёты, презентации, код).
+
+| Поле | Тип | Ограничения | Описание |
+|------|-----|-------------|----------|
+| `id` | SERIAL | PRIMARY KEY | Уникальный идентификатор файла |
+| `project_id` | INT | FOREIGN KEY → projects(id) | ID проекта, к которому прикреплён файл |
+| `file_name` | VARCHAR(255) | NOT NULL | Оригинальное имя файла |
+| `file_path` | VARCHAR(500) | NOT NULL | Путь к файлу на сервере |
+| `file_size` | INT | | Размер файла в байтах |
+| `uploaded_by` | INT | FOREIGN KEY → users(id) | ID пользователя, загрузившего файл |
+| `uploaded_at` | TIMESTAMP | DEFAULT NOW() | Дата загрузки |
+
+### 3.6 Таблица `comments` (Комментарии)
+
+Хранит комментарии к задачам (обсуждение внутри команды).
+
+| Поле | Тип | Ограничения | Описание |
+|------|-----|-------------|----------|
+| `id` | SERIAL | PRIMARY KEY | Уникальный идентификатор комментария |
+| `task_id` | INT | FOREIGN KEY → tasks(id) | ID задачи, к которой оставлен комментарий |
+| `user_id` | INT | FOREIGN KEY → users(id) | ID автора комментария |
+| `content` | TEXT | NOT NULL | Текст комментария |
+| `created_at` | TIMESTAMP | DEFAULT NOW() | Дата и время написания |
+
+---
+
+## 4. Ограничения целостности (Constraints)
+
+| Тип ограничения | Поля | Описание |
+|-----------------|------|----------|
+| PRIMARY KEY | `id` всех таблиц | Уникальный идентификатор каждой записи |
+| FOREIGN KEY | `owner_id`, `project_id`, `assignee_id`, и т.д. | Ссылочная целостность между таблицами |
+| UNIQUE | `users.email` | Два пользователя не могут иметь одинаковый email |
+| CHECK | `tasks.grade >= 0 AND <= 100` | Оценка только от 0 до 100 |
+| DEFAULT | `status`, `role`, `created_at` | Значения по умолчанию |
+| CASCADE | При удалении пользователя | Удаляются его проекты, задачи, комментарии |
+
+---
+
+## 5. Примеры SQL-запросов
+
+### 5.1 Получить все проекты студента (где он участник)
+
+```sql
+-- Запрос: список проектов для студента с id = 1
+SELECT 
+  p.id,
+  p.title,
+  p.deadline,
+  p.status,
+  pm.role_in_project,
+  COUNT(t.id) as total_tasks,
+  SUM(CASE WHEN t.status = 'done' THEN 1 ELSE 0 END) as completed_tasks
+FROM projects p
+JOIN project_members pm ON p.id = pm.project_id
+LEFT JOIN tasks t ON p.id = t.project_id
+WHERE pm.user_id = 1
+GROUP BY p.id, pm.role_in_project;
