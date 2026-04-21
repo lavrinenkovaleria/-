@@ -1,0 +1,41 @@
+server/
+├── src/
+│   ├── controllers/          # Обработчики запросов
+│   │   ├── authController.js
+│   │   ├── projectController.js
+│   │   ├── taskController.js
+│   │   ├── fileController.js
+│   │   └── gradeController.js
+│   │
+│   ├── routes/               # Маршруты API
+│   │   ├── authRoutes.js
+│   │   ├── projectRoutes.js
+│   │   ├── taskRoutes.js
+│   │   ├── fileRoutes.js
+│   │   └── gradeRoutes.js
+│   │
+│   ├── middleware/           # Промежуточные обработчики
+│   │   ├── authMiddleware.js   # Проверка JWT
+│   │   ├── roleMiddleware.js   # Проверка роли
+│   │   └── uploadMiddleware.js # Загрузка файлов
+│   │
+│   ├── services/             # Бизнес-логика
+│   │   ├── projectService.js
+│   │   ├── taskService.js
+│   │   └── statsService.js
+│   │
+│   ├── utils/                # Вспомогательные функции
+│   │   ├── hashPassword.js
+│   │   ├── generateToken.js
+│   │   └── validateEmail.js
+│   │
+│   ├── prisma/               # ORM Prisma
+│   │   ├── schema.prisma     # Схема БД
+│   │   └── migrations/       # Миграции
+│   │
+│   └── app.js                # Основной файл приложения
+│
+├── uploads/                  # Папка с загруженными файлами
+├── .env                      # Переменные окружения
+├── package.json
+└── server.js                 # Точка входа
